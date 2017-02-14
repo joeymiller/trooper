@@ -5,6 +5,7 @@ import (
 	"flag"
 	"text/template"
 
+	"github.com/joeymiller/creddie/credentials"
 	"github.com/mitchellh/cli"
 )
 
