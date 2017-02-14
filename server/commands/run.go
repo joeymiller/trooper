@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/joeymiller/creddie/credentials"
+	"github.com/joeymiller/trooper/requestcredentials"
 	"github.com/mitchellh/cli"
 )
 
