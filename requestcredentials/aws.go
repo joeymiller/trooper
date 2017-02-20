@@ -35,7 +35,7 @@ func Generate(role string) (*sts.AssumeRoleOutput, error) {
 	Params := &sts.AssumeRoleInput{
 		RoleArn:         aws.String(fmt.Sprintf("arn:aws:iam::%s:role/%s", AWS_ACCOUNT, role)),
 		RoleSessionName: aws.String(tempRoleSessionName),
-		DurationSeconds: aws.Int64(900),
+		DurationSeconds: aws.Int64(3600),
 	}
 
 	resp, err := svc.AssumeRole(Params)

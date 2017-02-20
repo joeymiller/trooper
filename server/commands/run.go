@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"fmt"
+
 	"github.com/gorilla/mux"
 	"github.com/joeymiller/trooper/requestcredentials"
 	"github.com/mitchellh/cli"
@@ -23,12 +25,6 @@ type ServerRunCommand struct {
 	Ui   cli.Ui
 }
 
-type CredentialsResponse struct {
-	AccessKeyId     string `json:"accessKeyId"`
-	SecretAccessKey string `json:"secretAccessKey"`
-	SessionToken    string `json:"sessionToken"`
-}
-
 func (s *ServerRunCommand) Run(args []string) int {
 
 	cmdFlags := flag.NewFlagSet("server", flag.ContinueOnError)
@@ -42,9 +38,9 @@ func (s *ServerRunCommand) Run(args []string) int {
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", s.Heartbeat)
-	router.HandleFunc("/generate", s.AWSTemporaryCredentials)
+	router.HandleFunc("/credentials", s.AWSTemporaryCredentials)
 
-	s.Ui.Output("Running trooper in Server mode.")
+	s.Ui.Output(fmt.Sprintf("Running trooper in Server mode on %s:%s", s.Host, s.Port))
 
 	log.Fatal(http.ListenAndServe(s.Host+":"+s.Port, router))
 
@@ -60,17 +56,24 @@ func (s *ServerRunCommand) Heartbeat(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *ServerRunCommand) AWSTemporaryCredentials(w http.ResponseWriter, r *http.Request) {
-	resp, err := requestcredentials.Generate("playground")
+	c, err := requestcredentials.Generate("playground")
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
-	var c CredentialsResponse
 
-	b, _ := json.Marshal(resp.Credentials)
-	json.Unmarshal(b, &c)
+	response, _ := json.Marshal(&struct {
+		AccessKeyId     string `json:"accessKeyId"`
+		SecretAccessKey string `json:"secretAccessKey"`
+		SessionToken    string `json:"sessionToken"`
+	}{
+		*c.Credentials.AccessKeyId,
+		*c.Credentials.SecretAccessKey,
+		*c.Credentials.SessionToken,
+	})
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(c)
+	w.Write(response)
 
 }
 
